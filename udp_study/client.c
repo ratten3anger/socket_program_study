@@ -26,6 +26,7 @@ int main(int argc,char*argv[]){
 	sendto(sockfd,argv[2],strlen(argv[2]),0,(struct sockaddr*)&server,sizeof(server));
 	socklen_t len;
 	len	 = sizeof(server);
+	//recv && send
 	while(1){
 		if((num = recvfrom(sockfd,buffer,MAXDATASIZE,0,(struct sockaddr *)&peer,&len)) == -1){
 			perror("recvfrom error");
