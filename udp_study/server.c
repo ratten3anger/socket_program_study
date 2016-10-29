@@ -1,12 +1,4 @@
-/*************************************************************************
-	> File Name: server.c
-	> Author: 
-	> Mail: 
-	> Created Time: Sat 29 Oct 2016 04:12:07 PM CST
- ************************************************************************/
-
-#include "socket_header.h"
-
+#include "udpstudy.h"
 
 char *revstr(char *str, size_t len){
 
