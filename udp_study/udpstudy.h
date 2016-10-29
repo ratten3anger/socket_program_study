@@ -9,6 +9,7 @@
 #define _SOCKET_HEADER_H
 #endif
 
+//all the head file needed
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
