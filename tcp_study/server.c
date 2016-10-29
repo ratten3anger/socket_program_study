@@ -65,6 +65,7 @@ int main(int argc,char *argv[]){
 
 	addrlen = sizeof(client);
 
+	//recv msg and revstr
 	while(1){
 
 		if((connect_fd = accept(socket_fd,(struct sockaddr_in*)&client,&addrlen)) == -1){
