@@ -24,6 +24,7 @@ int main(int argc,char *argv[]){
 		printf("Ussage:%s <IP address> <message>\n",argv[0]);
 		exit(1);
 	}
+
 	if((he = gethostbyname(argv[1])) == NULL){
 		printf("gethostbyname() error\n");
 		exit(1);
@@ -51,7 +52,7 @@ int main(int argc,char *argv[]){
 		printf("recv() error\n");
 		exit(-1);
 	}
-
+	//got msg
 	buffer[num] = '\0';
 	printf("[*]Got server message :%s\n",buffer);
 	printf("\n");
