@@ -41,6 +41,7 @@ int main(int argc,char *argv[]){
 	}
 
 	len = sizeof(client);
+	//recv
 	while(1){
 		num = recvfrom(sockfd,buffer,MAXDATASIZE,0,(struct sockaddr *)&client,&len);
 		if(num < 0){
