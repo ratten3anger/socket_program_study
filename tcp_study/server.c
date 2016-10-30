@@ -72,7 +72,7 @@ int main(int argc,char *argv[]){
 			perror("accept() error"); 
 			continue;
 		}else{
-			printf("[!]You got a connection from client's ip is:%s,port is %d\n",inet_ntoa(client.sin_addr),htons(client.sin_port));			
+			printf("[!]You got a connection: client's ip is:%s,port is %d\n",inet_ntoa(client.sin_addr),htons(client.sin_port));			
 		}
 
 		if((num = recv(connect_fd,buffer,MAXDATASIEZE,0)) == -1){
