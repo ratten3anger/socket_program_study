@@ -1,4 +1,4 @@
-#include "multiprocessstudy.h"
+#include "multithreadstudy.h"
 
 
 char *getMessage(char *sendline,int len,FILE *fp){
