@@ -28,7 +28,8 @@ int main(int argc,char *argv[]){
 		perror("Create socket error");
 		exit(-1);
 	}
-
+	int opt = SO_REUSEADDR;
+	setsockopt(sockfd,SOL_SOCKET,SO_REUSEADDR,&opt,sizeof(opt));
 	bzero(&server,sizeof(server));
 	server.sin_family = AF_INET;
 	server.sin_port = htons(PORT);
@@ -43,20 +44,18 @@ int main(int argc,char *argv[]){
 	len = sizeof(client);
 	//recv
 	while(1){
-		num = recvfrom(sockfd,buffer,MAXDATASIZE,0,(struct sockaddr *)&client,&len);
-		if(num < 0){
-			perror("recvfrom error!");
-			exit(-1);
+		while((num = recvfrom(sockfd,buffer,MAXDATASIZE,0,(struct sockaddr *)&client,&len)) != -1){
+			printf("[!]You got connetion from client %s , port is %d\n",inet_ntoa(client.sin_addr),htons(client.sin_port));
+			buffer[num] = '\0';
+			printf("[*]Got client message:%s\n",buffer);
+			if(!strncmp(buffer,"quit",4)){
+				printf("[!]Client exit\n", );
+				break;
+			}
+			sendto(sockfd,revstr(buffer,num),num,0,(struct sockaddr *)&client,len);
 		}
-		buffer[num] = '\0';
-		printf("[!]You got connetion from client %s , port is %d\n",inet_ntoa(client.sin_addr),htons(client.sin_port));
-		printf("[*]Got client message:%s\n",buffer);
-		if(!strcmp(buffer,"bye"))
-			break;
-		sendto(sockfd,revstr(buffer,num),num,0,(struct sockaddr *)&client,len);
+		close(sockfd);
 	}
-
-	close(sockfd);
 
     return 0;
 }
