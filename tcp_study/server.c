@@ -75,24 +75,19 @@ int main(int argc,char *argv[]){
 			printf("[!]You got a connection: client's ip is:%s,port is %d\n",inet_ntoa(client.sin_addr),htons(client.sin_port));			
 		}
 
-		if((num = recv(connect_fd,buffer,MAXDATASIEZE,0)) == -1){
-			printf("recv() error\n");
-			exit(-1);
-		}else{
+		while((num = recv(connect_fd,buffer,MAXDATASIEZE,0)) != -1){
 			buffer[num] = '\0';
-            if(!strcmp(buffer,"quit")){
+            if(!strncmp(buffer,"quit",4)){
+                printf("[!]Client exit.\n");
                 send(connect_fd,"Connection closed",strlen("Connection closed"),0);
-                printf("[!]Client exit.\n", );
-                close(connect_fd);
+                break;
             }else{
 			    printf("[*]Client msg:%s\n",buffer);
 			    send(connect_fd,revstr(buffer,num),num,0);
-			    close(connect_fd);
 			}
 		}
+		close(connect_fd);
 	}
-
 	close(socket_fd);
-
 	return 0;
 }
