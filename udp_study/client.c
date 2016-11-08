@@ -47,7 +47,7 @@ int main(int argc,char*argv[]){
 			close(sockfd);
 			exit(0);
 		}
-		printf("[*]Server message:%s.\n",buffer);
+		printf("[*]Receviced message:%s , from server:<%s,%d>\n",buffer,inet_ntoa(server.sin_addr),htons(server.sin_port));
 	}
 	close(sockfd);
 
