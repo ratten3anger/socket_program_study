@@ -38,8 +38,13 @@ void process_cli(int connfd,struct sockaddr_in client){
 	printf("[*]Client's name is : %s\n",cli_name);
 	while(num = recv(connfd,recvbuf,MAXDATASIZE,0)){
 		recvbuf[num] = '\0';
-		printf("[*]Received client(%s) message:%s\n", cli_name,recvbuf);
-		send(connfd,revstr(recvbuf,num),num,0);
+		if(!strncmp(recvbuf,"quit",4)){
+			printf("[!]Client exit.\n");
+			send(connfd,"Connection closed",strlen("Connection closed"),0);
+		}else{
+			printf("[*]Received client(%s) message:%s\n", cli_name,recvbuf);
+			send(connfd,revstr(recvbuf,num),num,0);
+		}
 	}
 	close(connfd);
 }
