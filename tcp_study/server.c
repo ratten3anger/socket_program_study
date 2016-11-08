@@ -1,7 +1,7 @@
 #include <netdb.h>
 #include <stdio.h> 
 #include <stdlib.h>
-#include <strings.h> 
+#include <string.h> 
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -80,9 +80,14 @@ int main(int argc,char *argv[]){
 			exit(-1);
 		}else{
 			buffer[num] = '\0';
-			printf("[*]Client msg:%s\n",buffer);
-			send(connect_fd,revstr(buffer,num),num,0);
-			close(connect_fd);
+            if(!strcmp(buffer,"quit")){
+                send(connect_fd,"Connection closed",strlen("Connection closed"),0);
+                close(connect_fd);
+            }else{
+			    printf("[*]Client msg:%s\n",buffer);
+			    send(connect_fd,revstr(buffer,num),num,0);
+			    close(connect_fd);
+			}
 		}
 	}
 
