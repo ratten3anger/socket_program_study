@@ -5,10 +5,13 @@ int main(int argc,char*argv[]){
 
 	int sockfd,num;
 	char buffer[MAXDATASIZE] = {0};
+	char sendbuffer[MAXDATASIZE] = {0};
 	struct hostent *he;
 	struct sockaddr_in server,peer;
-	if(argc != 3){
-		printf("Usage: %s <IP address> <Message>\n",argv[0]);
+	setbuf(stdin,0);
+	setbuf(stdout,0);
+	if(argc != 2){
+		printf("Usage: %s <IP address>",argv[0]);
 		exit(-1);
 	}
 	if((he = gethostbyname(argv[1])) == NULL){
@@ -23,14 +26,16 @@ int main(int argc,char*argv[]){
 	server.sin_family = AF_INET;
 	server.sin_port = htons(PORT);
 	server.sin_addr = *((struct in_addr*)he->h_addr);
-	sendto(sockfd,argv[2],strlen(argv[2]),0,(struct sockaddr*)&server,sizeof(server));
-	socklen_t len;
-	len	 = sizeof(server);
 	//recv && send
 	while(1){
+		printf("[-]Send data to server:");
+		read(0,sendbuffer,MAXDATASIZE-1);
+		sendto(sockfd,sendbuffer,strlen(sendbuffer),0,(struct sockaddr*)&server,sizeof(server));
+		socklen_t len;
+		len	 = sizeof(server);
 		if((num = recvfrom(sockfd,buffer,MAXDATASIZE,0,(struct sockaddr *)&peer,&len)) == -1){
 			perror("recvfrom error");
-			exit(-1);
+			break;
 		}
 		//make sure you recevice the right msg;
 		if(len != sizeof(server) || memcmp((const void*)&server,(const void *)&peer,len) != 0){
@@ -39,7 +44,6 @@ int main(int argc,char*argv[]){
 		}
 		buffer[num] = '\0';
 		printf("[*]Server message:%s.\n",buffer);
-		break;
 	}
 	close(sockfd);
 
