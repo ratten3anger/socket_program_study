@@ -43,6 +43,10 @@ int main(int argc,char*argv[]){
 			continue;
 		}
 		buffer[num] = '\0';
+		if(!strncmp(buffer,"exit",4)){
+			close(sockfd);
+			exit(0);
+		}
 		printf("[*]Server message:%s.\n",buffer);
 	}
 	close(sockfd);
