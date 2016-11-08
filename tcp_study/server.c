@@ -82,6 +82,7 @@ int main(int argc,char *argv[]){
 			buffer[num] = '\0';
             if(!strcmp(buffer,"quit")){
                 send(connect_fd,"Connection closed",strlen("Connection closed"),0);
+                printf("[!]Client exit.\n", );
                 close(connect_fd);
             }else{
 			    printf("[*]Client msg:%s\n",buffer);
