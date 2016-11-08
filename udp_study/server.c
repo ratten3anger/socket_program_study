@@ -43,19 +43,19 @@ int main(int argc,char *argv[]){
 
 	len = sizeof(client);
 	//recv
-	while(1){
-		while((num = recvfrom(sockfd,buffer,MAXDATASIZE,0,(struct sockaddr *)&client,&len)) != -1){
-			printf("[!]You got connetion from client %s , port is %d\n",inet_ntoa(client.sin_addr),htons(client.sin_port));
-			buffer[num] = '\0';
-			printf("[*]Got client message:%s\n",buffer);
-			if(!strncmp(buffer,"quit",4)){
-				printf("[!]Client exit\n", );
-				break;
-			}
-			sendto(sockfd,revstr(buffer,num),num,0,(struct sockaddr *)&client,len);
+	while((num = recvfrom(sockfd,buffer,MAXDATASIZE,0,(struct sockaddr *)&client,&len)) != -1){
+		printf("[!]You got connetion from client %s , port is %d\n",inet_ntoa(client.sin_addr),htons(client.sin_port));
+		buffer[num] = '\0';
+		printf("[*]Got client message:%s\n",buffer);
+		if(!strncmp(buffer,"quit",4)){
+			printf("[!]Client exit\n");
+			sendto(sockfd,"exit",4,0,(struct sockaddr *)&client,len);
+			break;
 		}
-		close(sockfd);
+		sendto(sockfd,revstr(buffer,num),num,0,(struct sockaddr *)&client,len);
 	}
+	close(sockfd);
+
 
     return 0;
 }
