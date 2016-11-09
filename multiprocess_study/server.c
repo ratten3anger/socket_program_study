@@ -21,7 +21,7 @@ void process_cli(int connfd,struct sockaddr_in client){
 	char recvbuf[MAXDATASIZE] = {0};
 	char sendbuf[MAXDATASIZE] = {0};
 	char cli_name[MAXDATASIZE] = {0};
-	printf("[!]You got a connection from :%s,port is %d\n",inet_ntoa(client.sin_addr),htons(client.sin_port));
+	printf("[!]You got a connection from :%s,port is %d\n",inet_ntoa(client.sin_addr),ntohs(client.sin_port));
 
 	num = recv(connfd,cli_name,MAXDATASIZE,0);
 	if(num == 0){
@@ -33,7 +33,7 @@ void process_cli(int connfd,struct sockaddr_in client){
 	printf("[*]Client's name is : %s\n",cli_name);
 	while(num = recv(connfd,recvbuf,MAXDATASIZE,0)){
 		recvbuf[num] = '\0';
-		if(!strcmp(recvbuf,"quit")){
+		if(!strncmp(recvbuf,"quit",4)){
 			printf("[!]Client exit\n");
 			send(connfd,"Connection closed",strlen("Connection closed"),0);
 			break;
