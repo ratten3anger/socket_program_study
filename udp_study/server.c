@@ -44,7 +44,7 @@ int main(int argc,char *argv[]){
 	len = sizeof(client);
 	//recv
 	while((num = recvfrom(sockfd,buffer,MAXDATASIZE,0,(struct sockaddr *)&client,&len)) != -1){
-		printf("[!]You got connetion from client %s , port is %d\n",inet_ntoa(client.sin_addr),htons(client.sin_port));
+		printf("[!]You got connetion from client %s , port is %d\n",inet_ntoa(client.sin_addr),ntohs(client.sin_port));
 		buffer[num] = '\0';
 		printf("[*]Got client message:%s\n",buffer);
 		if(!strncmp(buffer,"quit",4)){
