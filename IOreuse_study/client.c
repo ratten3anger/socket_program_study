@@ -12,10 +12,6 @@ void process(FILE *fp,int sockfd){
 	char recvline[MAXDATASIZE] = {0};
 	int num;
 	printf("[!]Connect to server\n");
-	printf("[-]Input the client's name:");
-	//read info and send
-	read(0,sendline,MAXDATASIZE-1);
-	send(sockfd,sendline,strlen(sendline),0);
 
 	while(getMessage(sendline,MAXDATASIZE,fp) != NULL){
 		send(sockfd,sendline,strlen(sendline),0);
