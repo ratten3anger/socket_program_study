@@ -1,167 +1,200 @@
 #include "IO_reuse.h"
 
 
-typedef struct CLIENT{
-    int fd;
-    char *name;
-    struct sockaddr_in addr;
-    char *data;
-}CLIENT_INFO;
-
-char *revstr(char *str, size_t len){
-
-    char    *start = str;
-    char    *end = str + len - 1;
-    char    ch;
-
-    if (str != NULL){
-        while (start < end){
-            ch = *start;
-            *start++ = *end;
-            *end-- = ch;
+ssize_t readn(int fd, void *buf, size_t count){
+    size_t nLeft = count;
+    ssize_t nRead = 0;
+    char *pBuf = (char *)buf;
+    while (nLeft > 0){
+        if ((nRead = read(fd, pBuf, nLeft)) < 0){
+            if (errno == EINTR)
+                continue;
+            else
+                return -1;
         }
+        else if (nRead == 0)
+            return count-nLeft;
+
+        nLeft -= nRead;
+        pBuf += nRead;
     }
-    return str;
+    return count;
 }
 
-void savedata(char *recvbuf,int len,char *data){
-	int start = strlen(data);
-	for(int i = 0;i < len;i++){
-		data[start+i] = recvbuf[i];
-	}
+ssize_t writen(int fd, const void *buf, size_t count){
+    size_t nLeft = count;
+    ssize_t nWritten = 0;
+    char *pBuf = (char *)buf;
+    while (nLeft > 0){
+        if ((nWritten = write(fd, pBuf, nLeft)) < 0){
+            if (errno == EINTR)
+                continue;
+            else
+                return -1;
+        }
+        else if (nWritten == 0)
+            continue;
 
+        nLeft -= nWritten;
+        pBuf += nWritten;
+    }
+    return count;
 }
 
-void process_cli(CLIENT_INFO* client,char* recvbuf,int len){
 
-	recvbuf[len] = '\0';
-	if(strlen(client->name) == 0){
-		memcpy(client->name,recvbuf,len);
-		printf("Client 's name is : %s \n",client->name);
-		return;
-	}
+ssize_t recv_peek(int sockfd, void *buf, size_t len){
+    while (1){
+        int ret = recv(sockfd, buf, len, MSG_PEEK);
+        if (ret == -1 && errno == EINTR)
+            continue;
+        return ret;
+    }
+}
 
-	printf("Received client(%s) message:%s\n",client->name,recvbuf);
-	//save data
-	savedata(recvbuf,len,client->data);
-	//reverse and send
-	send(client->fd,revstr(recvbuf,len),strlen(recvbuf),0);
+ssize_t readline(int sockfd, void *buf, size_t maxline){
+    int ret;
+    int nRead = 0;
+    int returnCount = 0;
+    char *pBuf = (char *)buf;
+    int nLeft = maxline;
+    while (1){
+        ret = recv_peek(sockfd, pBuf, nLeft);
+        if (ret <= 0)
+            return ret;
+        nRead = ret;
+        for (int i = 0; i < nRead; ++i)
+            if (pBuf[i] == '\n'){
 
+                ret = readn(sockfd, pBuf, i+1);
+                if (ret != i+1)
+                    exit(EXIT_FAILURE);
+                return ret + returnCount;
+            }
+
+        ret = readn(sockfd, pBuf, nRead);;
+        if (ret != nRead)
+            exit(EXIT_FAILURE);
+        pBuf += nRead;
+        nLeft -= nRead;
+        returnCount += nRead;
+    }
+    return -1;
 }
 
 
 int main(int argc,char *argv[]){
 
-	int i,maxi,maxfd,sockfd;
-	int nready;
-	ssize_t n;
-	fd_set reset,allset;
-	int listenfd,connectfd; //socket descriptors
-	struct sockaddr_in server;
-	//client's info
-	CLIENT_INFO client[FD_SETSIZE];
-	char recvbuf[MAXDATASIZE] = {0};
-	int sin_size;
+    struct sockaddr_in clientAddr;
+	int listenfd,nReady,maxfd,connfd;
 
-	if((listenfd = socket(AF_INET,SOCK_STREAM,0)) == -1){
-		perror("create socket error");
-		exit(-1);
-	}
-	int opt = SO_REUSEADDR;
-	setsockopt(listenfd,SOL_SOCKET,SO_REUSEADDR,&opt,sizeof(opt));
+	setbuf(stdin,0);
+	setbuf(stdout,0);
 
-	bzero(&server,sizeof(server));
-	server.sin_family = AF_INET;
-	server.sin_port = htons(PORT);
-	server.sin_addr.s_addr = htonl(INADDR_ANY);
+    listenfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (listenfd == -1){
+        perror("socket error");
+    }
 
-	//bind
-	if(bind(listenfd,(struct sockaddr *)&server,sizeof(server)) == -1){
-		perror("bind error");
-		exit(-1);
-	}
+    //addr reuse
+    int on = 1;
+    if (setsockopt(listenfd,SOL_SOCKET,SO_REUSEADDR,&on,sizeof(on)) == -1){
+        perror("setsockopt SO_REUSEADDR error");
+    }
 
-	//listen
-	if(listen(listenfd,BACKLOG) == -1){
-		perror("listen error");
-		exit(-1);
-	}
+    struct sockaddr_in addr;
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(PORT);
+    addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-	sin_size = sizeof(struct sockaddr_in);
-	//init for select();
-	maxfd = listenfd;
-	maxi = -1;
-	for(i = 0;i<FD_SETSIZE;i++){
-		client[i].fd = -1;
-	}
-	FD_ZERO(&allset);
-	FD_SET(listenfd,&allset);
+    if (bind(listenfd, (const struct sockaddr *)&addr, sizeof(addr)) == -1){
+        perror("bind error");
+    }
 
-	while(1){
-		struct sockaddr_in addr;
-		char *client_name = NULL;
-		char *client_data = NULL;
-		reset = allset;
-		// int select(int maxfdp,fd_set*readset,fd_set*writeset,\
-						fd_set* execepset,const struct timeval* timeout);
-		nready = select(maxfd+1,&reset,NULL,NULL,NULL);
+    if (listen(listenfd, BACKLOG) == -1){
+        perror("listen error");
+    }
 
-		if(FD_ISSET(listenfd,&reset)){
-			//new client connection
-			if((connectfd = accept(listenfd,(struct sockaddr*)&addr,&sin_size)) == -1){
-				perror("accpet error");
-				continue;
-			}
+    socklen_t addrLen;
 
-			//put new fd to client
-			for(i = 0;i<FD_SETSIZE;i++){
-				if(client[i].fd < 0){
-					client_name = (char*)malloc(MAXDATASIZE*sizeof(char));
-					client_data = (char*)malloc(MAXDATASIZE*sizeof(char));
-					client[i].fd = connectfd;
-					client[i].name = client_name ;
-					client[i].addr = addr;
-					client[i].data = client_data;
-					client[i].name[0] = '\0';
-					client[i].data[0] = '\0';
-					printf("[!]You got a connection from :%s,port is %d\n",\
-						inet_ntoa(client[i].addr.sin_addr),htons(client[i].addr.sin_port));
-				}
-			}
-			if(i == FD_SETSIZE)
-				printf("Too many clients\n");
-			FD_SET(connectfd,&allset);
-			if(connectfd > maxfd)
-				maxfd = connectfd;
-			if(i > maxi)
-				maxi = i;
-			// no more readable desciptors
-			if(--nready <= 0)
-				continue;
-		}
-		for(i = 0;i <= maxi ;i++){
-			//check all clients for data
-			if((sockfd = client[i].fd) < 0)
-				continue;
-			if(FD_ISSET(sockfd,&reset)){
-				if((n = recv(sockfd,recvbuf,MAXDATASIZE,0)) == 0){
-					//connection closed by client
-					close(sockfd);
-					printf("Client(%s) closed connection.User's data:%s \n",\
-								client[i].name,client[i].data);
-					FD_CLR(sockfd,&allset);
-					client[i].fd = -1;
-					free(client[i].name);
-					free(client[i].data);
-				}else{
-					process_cli(&client[i],recvbuf,n);
-				}
-			if(--nready <= 0)
-				break;
-			}
-		}
-	}
-	close(listenfd);
+    maxfd = listenfd;
+    fd_set rset;
+    fd_set allset;
+    FD_ZERO(&rset);
+    FD_ZERO(&allset);
+    FD_SET(listenfd, &allset);
 
-	return 0;
+    //for connected clients
+    int client[FD_SETSIZE];
+    for (int i = 0; i < FD_SETSIZE; ++i){
+        client[i] = -1;
+    }
+    int maxi = 0;
+
+    while (1){
+        rset = allset;
+        nReady = select(maxfd+1, &rset, NULL, NULL, NULL);
+
+        if (nReady == -1){
+            if (errno == EINTR)
+                continue;
+            perror("select error");
+        }
+        else if (nReady == 0)
+            continue;
+
+        if (FD_ISSET(listenfd, &rset)){
+            addrLen = sizeof(clientAddr);
+            connfd = accept(listenfd, (struct sockaddr *)&clientAddr, &addrLen);
+            if (connfd == -1)
+                perror("accept error");
+
+            int i;
+            for (i = 0; i < FD_SETSIZE; ++i){
+                if (client[i] < 0){
+                    client[i] = connfd;
+                    if (i > maxi)
+                        maxi = i;
+                    break;
+                }
+            }
+            if (i == FD_SETSIZE){
+                write(1,"[x]too many clients",strlen("too many clients"));
+                exit(EXIT_FAILURE);
+            }
+			printf("[!]You got a connection: client's ip is:%s,port is %d\n",inet_ntoa(clientAddr.sin_addr),ntohs(clientAddr.sin_port));		
+            FD_SET(connfd, &allset);
+            if (connfd > maxfd)
+                maxfd = connfd;
+
+            if (--nReady <= 0)
+                continue;
+        }
+        for (int i = 0; i <= maxi; ++i)
+            if ((client[i] != -1) && FD_ISSET(client[i], &rset)){
+                char buf[512] = {0};
+                char sendbuf[512] = {0};
+                int readBytes = readline(client[i], buf, sizeof(buf));
+                if (readBytes == -1){
+                    perror("readline error");
+                }
+                else if (readBytes == 0){
+                    write(1,"client connect closed...",strlen("client connect closed..."));
+                    FD_CLR(client[i], &allset);
+                    close(client[i]);
+                    client[i] = -1;
+                }
+
+                sleep(1);
+                printf("[*]Got msg from client : %s \n",buf);
+                write(1,"[!]Say sth to client:",strlen("[!]Say sth to client:"));
+                read(0,sendbuf,512);
+                if (writen(client[i], sendbuf, strlen(sendbuf)) == -1){
+                    perror("writen error");
+                }
+
+                if (--nReady <= 0)
+                    break;
+            }
+    }
+    close(listenfd);
 }
