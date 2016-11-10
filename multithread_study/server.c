@@ -41,6 +41,7 @@ void process_cli(int connfd,struct sockaddr_in client){
 		if(!strncmp(recvbuf,"quit",4)){
 			printf("[!]Client exit.\n");
 			send(connfd,"Connection closed",strlen("Connection closed"),0);
+			break;
 		}else{
 			printf("[*]Received client(%s) message:%s\n", cli_name,recvbuf);
 			send(connfd,revstr(recvbuf,num),num,0);
