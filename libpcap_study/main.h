@@ -1,4 +1,4 @@
-//reference : http://www.tcpdump.org/sniffex.c
+//copy from : http://www.tcpdump.org/sniffex.c
 
 #include <pcap.h>
 #include <stdio.h>
