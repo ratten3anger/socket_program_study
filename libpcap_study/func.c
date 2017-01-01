@@ -29,7 +29,7 @@ void got_packet(u_char *args, \
 				const struct pcap_pkthdr *header,\
 				const u_char *packet){
     
-    int packet_count = 1;
+    static int packet_count = 1;
 	int size_ip;
     const struct sniff_ethernet *ethernet;  /* The ethernet header [1] */
 	const struct sniff_ip *ip;              /* The IP header */
