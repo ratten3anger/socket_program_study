@@ -28,13 +28,11 @@ pcap_t * open_device(char *dev){
 void got_packet(u_char *args, \
 				const struct pcap_pkthdr *header,\
 				const u_char *packet){
-    
-    static int packet_count = 1;
+	
 	int size_ip;
+    static int packet_count = 1;
     const struct sniff_ethernet *ethernet;  /* The ethernet header [1] */
 	const struct sniff_ip *ip;              /* The IP header */
-	const struct sniff_tcp *tcp;            /* The TCP header */
-	const char *payload;
 
 	printf("\nPacket number %d:\n", packet_count);
 	packet_count++;	
