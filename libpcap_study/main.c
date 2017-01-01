@@ -30,9 +30,10 @@ int main(int argc,char *argv[]){
     }
 
     if((handle = open_device(dev)) != NULL){
-    	printf("ok\n");
+    	printf("[*]ok...\n");
+    	printf("[*]Device : %s\n",argv[2]);
     }else{
-    	printf("error\n");
+    	printf("[!]error\n");
     	return -1;
     }
     //set callback function
@@ -40,6 +41,7 @@ int main(int argc,char *argv[]){
 	//				int cnt,
 	//				pcap_handler callback,
 	//				u_char *user );
+	printf("[*]Begin to capture packet...\n");
     pcap_loop(handle,-1,got_packet,NULL);
     
     pcap_close(handle);
