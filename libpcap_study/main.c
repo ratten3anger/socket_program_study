@@ -6,23 +6,29 @@
  ************************************************************************/
 #include "main.h"
 
-
 int main(int argc,char *argv[]){
 
     char *dev = (char *)malloc(DEVICENAME * sizeof(char));
     int opt = 0;
+	int send_enable = 0;
     pcap_t *handle = NULL; 
+
+	setbuf(stdin,NULL);
+	setbuf(stdout,NULL);
 
     if(argc == 1){
     	show_usage(argv);
     	return 1;
     }
 
-    while((opt = getopt(argc,argv,"hd:")) != -1){
+    while((opt = getopt(argc,argv,"hd:s")) != -1){
     	switch(opt){
     		case 'h':
     			show_usage(argv);
     			return 1;
+			case 's':
+				send_enable = 1;
+				break;
     		case 'd':
     			strncpy(dev,optarg,DEVICENAME);
     			break;
@@ -41,9 +47,21 @@ int main(int argc,char *argv[]){
 	//				int cnt,
 	//				pcap_handler callback,
 	//				u_char *user );
-	printf("[*]Begin to capture packet...\n");
-    pcap_loop(handle,-1,got_packet,NULL);
-    
+	if(!send_enable){
+		printf("[*]Begin to capture packet...\n");
+    	pcap_loop(handle,-1,got_packet,NULL);
+	}else{
+		while(1){
+			switch(send_menu()){
+				case 1:
+					send_arp_packet();
+					break;
+				default:
+					printf("Other type not suporrt now!\n");
+					break;
+			}
+		}
+	}
     pcap_close(handle);
     return 0;
 }
