@@ -54,7 +54,7 @@ int main(int argc,char *argv[]){
 		while(1){
 			switch(send_menu()){
 				case 1:
-					send_arp_packet();
+					send_arp_packet(handle);
 					break;
 				default:
 					printf("Other type not suporrt now!\n");

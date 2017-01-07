@@ -22,13 +22,17 @@
 /* Ethernet addresses are 6 bytes */
 #define ETHER_ADDR_LEN	6
 
+#define ETHER_IP_PROTO  0x0800
+#define ETHER_ARP_PROTO 0x0806
+
 void show_usage(char *argv[]);
 pcap_t * open_device(char *dev);
 void got_packet(u_char *args, \
                                 const struct pcap_pkthdr *header,\
                                 const u_char *packet);
 int send_menu();
-void send_arp_packet();
+void send_arp_packet(pcap_t *handle);
+
 /* Ethernet header */
 struct sniff_ethernet {
         u_char  ether_dhost[ETHER_ADDR_LEN];    /* destination host address */
@@ -54,3 +58,16 @@ struct sniff_ip {
 };
 #define IP_HL(ip)               (((ip)->ip_vhl) & 0x0f)
 #define IP_V(ip)                (((ip)->ip_vhl) >> 4)
+
+struct myarphdr  {  
+    unsigned short hw_type;           /* hardware address */  
+    unsigned short protocol_type;             /* protocol address */  
+    unsigned char hw_addr_len;       /* length of hardware address */  
+    unsigned char protocol_addr_len;         /* length of protocol address */  
+    unsigned short opcode;              /*operate code 1 ask 2 reply*/  
+    unsigned char src_mac[6];  
+    struct in_addr src_ip;   
+    unsigned char dst_mac[6];  
+    struct in_addr dst_ip;  
+    unsigned char padding[18];  
+}; 

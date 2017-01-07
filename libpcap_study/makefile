@@ -1,4 +1,4 @@
 target:
-	cc main.c func.c -o sniffer -lpcap
+	clang main.c func.c -o sniffer -lpcap
 clean:
 	rm sniffer
