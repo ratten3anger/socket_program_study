@@ -67,3 +67,14 @@ void got_packet(u_char *args, \
 			return;
 	}
 }
+int send_menu(){
+	char opt[5];
+	printf("[*]Plz choice packet you want to send:\n");
+	printf("1. ARP\n");
+	printf(">");
+	read(0,opt,5);
+	return atoi(opt);
+}
+void send_arp_packet(){
+	printf("I will send ARP PACKET!\n");
+}
