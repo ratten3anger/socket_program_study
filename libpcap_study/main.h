@@ -27,7 +27,8 @@ pcap_t * open_device(char *dev);
 void got_packet(u_char *args, \
                                 const struct pcap_pkthdr *header,\
                                 const u_char *packet);
-
+int send_menu();
+void send_arp_packet();
 /* Ethernet header */
 struct sniff_ethernet {
         u_char  ether_dhost[ETHER_ADDR_LEN];    /* destination host address */
