@@ -3,10 +3,12 @@
 char error_buf[PCAP_ERRORBUF_SIZE] = {0};
 
 void show_usage(char *argv[]){
-	printf("[*]Usage:%s -d device\n",argv[0]);
+	printf("[*]Usage:%s -d device [-s]\n",argv[0]);
 	printf("[*]Help :%s -h\n",argv[0]);
+	printf("\tsniffer will send packet if -s flag is setted\n");
 	printf("[*]Example:\n");
 	printf("\t%s -d eth0\n",argv[0]);
+	printf("\t%s -d eth0 -s\n",argv[0]);
 }
 
 pcap_t * open_device(char *dev){
