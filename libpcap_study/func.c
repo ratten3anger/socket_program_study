@@ -102,6 +102,6 @@ void send_arp_packet(pcap_t * handle){
 	printf("I will send ARP PACKET!\n");
 
 	for(int i = 0;i<100;i++){
-		 pcap_sendpacket(handle,data,32);
+		 pcap_sendpacket(handle,data,42);
 	}
 }
