@@ -31,8 +31,9 @@ void got_packet(u_char *args, \
 	
 	int size_ip;
     static int packet_count = 1;
-    const struct sniff_ethernet *ethernet;  /* The ethernet header [1] */
-	const struct sniff_ip *ip;              /* The IP header */
+    const struct sniff_ethernet *ethernet = NULL;  /* The ethernet header [1] */
+	const struct sniff_ip *ip = NULL;              /* The IP header */
+	struct arphdr *arpheader = NULL;
 
 	printf("\nPacket number %d:\n", packet_count);
 	packet_count++;	
@@ -45,6 +46,10 @@ void got_packet(u_char *args, \
 			break;
 		case ETHER_ARP_PROTO:
 			printf("\t----ARP----\n");
+			arpheader = (struct arphdr *)(packet + SIZE_ETHERNET);
+			printf("	Hardware type: %s\n", (ntohs(arpheader->htype) == 1) ? "Ethernet" : "Unknown");
+			printf("	Protocol type: %s\n", (ntohs(arpheader->ptype) == 0x0800) ? "IPv4" : "Unknown");
+			printf("	Operation: %s\n", (ntohs(arpheader->oper) == ARP_REQUEST)? "ARP Request" : "ARP Reply");
 			return;
 		default:
 			printf("\t----unknown----\n");
@@ -88,23 +93,15 @@ int send_menu(){
 	return atoi(opt);
 }
 
-//ICMP packet,just for test
-u_char data[142] = {0x00,0xd0,0xd0,0xa1,0x1f,0x40,0x00,0x10,0xdb,0x3f,0xa1,0x35,0x08,0x00,\
-            0x45,0x00,0x00,0x80,0x95,0x11,0x00,0x00,0x3f,0x01,0x8b,0x5b,0xc2,0x88,0x51,0xde,\
-            0x46,0x00,0x00,0xaa,0x00,0x00,0x32,0,0,0,0,0,1,2,3,4,5,6,7,8,9,10,\
-        11,12,13,14,15,16,17,18,19,20,\
-        21,22,23,24,25,26,27,28,29,30,\
-        31,32,33,34,35,36,37,38,39,40,\
-        41,42,43,44,45,46,47,48,49,50,\
-        51,52,53,54,55,56,57,58,59,60,\
-        61,62,63,64,65,66,67,68,69,70,\
-        71,72,73,74,75,76,77,78,79,80,\
-        81,82,83,84,85,86,87,88,89,90,\
-        91,92,93,94,95,96,97,98,99,100};
+//ARP packet for test
+u_char data[142] = {0xff,0xff,0xff,0xff,0xff,0xff,0x30,0x10,0xb3,0x22,0x6c,0x84,0x08,0x06,0x00,0x01,\
+		0x08,0x00,0x06,0x04,0x00,0x01,0x30,0x10,0xb3,0x22,0x6c,0x84,0xc0,0xa8,0x01,0x78,\
+		0xff,0xff,0xff,0xff,0xff,0xff,0xc0,0xa8,0x00,0x72};
 
 void send_arp_packet(pcap_t * handle){
-	//printf("I will send ARP PACKET!\n");
-	for(int i = 0;i<1000;i++){
-		 pcap_sendpacket(handle,data,142);
+	printf("I will send ARP PACKET!\n");
+
+	for(int i = 0;i<100;i++){
+		 pcap_sendpacket(handle,arp,sizeof(arp));
 	}
 }

@@ -24,6 +24,8 @@
 
 #define ETHER_IP_PROTO  0x0800
 #define ETHER_ARP_PROTO 0x0806
+#define ARP_REQUEST 1   /* ARP Request             */
+#define ARP_REPLY 2     /* ARP Reply               */
 
 void show_usage(char *argv[]);
 pcap_t * open_device(char *dev);
@@ -59,15 +61,19 @@ struct sniff_ip {
 #define IP_HL(ip)               (((ip)->ip_vhl) & 0x0f)
 #define IP_V(ip)                (((ip)->ip_vhl) >> 4)
 
-struct myarphdr  {  
-    unsigned short hw_type;           /* hardware address */  
-    unsigned short protocol_type;             /* protocol address */  
-    unsigned char hw_addr_len;       /* length of hardware address */  
-    unsigned char protocol_addr_len;         /* length of protocol address */  
-    unsigned short opcode;              /*operate code 1 ask 2 reply*/  
-    unsigned char src_mac[6];  
-    struct in_addr src_ip;   
-    unsigned char dst_mac[6];  
-    struct in_addr dst_ip;  
-    unsigned char padding[18];  
-}; 
+struct arphdr{
+    u_int16_t htype;    /* Hardware Type           */
+    u_int16_t ptype;    /* Protocol Type           */
+    u_char hlen;        /* Hardware Address Length */
+    u_char plen;        /* Protocol Address Length */
+    u_int16_t oper;     /* Operation Code          */
+    u_char sha[6];      /* Sender hardware address */
+    u_char spa[4];      /* Sender IP address       */
+    u_char tha[6];      /* Target hardware address */
+    u_char tpa[4];      /* Target IP address       */
+};
+
+struct arp_packet{
+    struct sniff_ethernet ethernet;
+    struct arphdr myarphdr;
+};
