@@ -9,8 +9,7 @@
 
 #define MAXDATALEN 255
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]){
 	int maxfd, sockfd;
 	int n, socklen;
 	char msg[MAXDATALEN+1];
@@ -62,6 +61,7 @@ int main(int argc, char *argv[])
 		FD_SET(fileno(stdin), &infds);
 		FD_SET(sockfd, &infds);
 		maxfd = (fileno(stdin) > sockfd ? fileno(stdin):sockfd) +1;
+
 		if(select(maxfd, &infds, NULL, NULL, NULL) == -1){
 			fprintf(stderr, "select error\n");
 			exit(-1);
@@ -70,12 +70,12 @@ int main(int argc, char *argv[])
 		if(FD_ISSET(sockfd, &infds)){
 			n = read(sockfd, msg, MAXDATALEN);
 			if((n == -1) || (n == 0)){
-				printf("peer closed\n");
+				printf("[!]peer closed\n");
 				exit(-1);
 			}
 			else{
 				msg[n] = 0;
-				printf("Msg from dest: %s\n", msg);
+				printf("\t[*]Msg from dest: %s\n", msg);					
 			}
 		}
 
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
 			fgets(msg, MAXDATALEN, stdin);
 			msg[strlen(msg)-1] = '\0';
 			if(strlen(msg) == 0){
-				printf("talk closed..\n");
+				printf("[!]Connection closed\n");
 				exit(0);
 			}
 			write(sockfd, msg, strlen(msg));
